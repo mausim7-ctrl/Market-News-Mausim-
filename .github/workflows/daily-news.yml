@@ -1,12 +1,11 @@
 name: Daily Market News Update
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+
   schedule:
     - cron: "30 1 * * *"
+
 permissions:
   contents: write
 
@@ -15,128 +14,511 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # --------------------------------------------------
+      # 1. Checkout repository
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
+      # --------------------------------------------------
+      # 2. Generate daily report
+      # --------------------------------------------------
       - name: Generate daily report
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
         run: |
+
           python - <<'PY'
+
           import json
           import os
           import urllib.request
+          import urllib.parse
+          import xml.etree.ElementTree as ET
+
           from datetime import datetime
           from zoneinfo import ZoneInfo
 
-          os.makedirs("data", exist_ok=True)
 
-          today = datetime.now(
-              ZoneInfo("Asia/Kolkata")
-          ).strftime("%d %B %Y")
+          # ==================================================
+          # BASIC SETTINGS
+          # ==================================================
 
-          report = {
-              "date": today,
-              "time": "7:00 AM IST",
-              "mood": "Cautious",
-              "summary": "Daily Indian market pre-open report.",
-              "stats": {
-                  "nifty": "—",
-                  "crude": "—",
-                  "usdinr": "—",
-                  "fii": "—"
-              },
-              "drivers": [],
-              "setup": [
-                  "—",
-                  "Awaiting confirmation",
-                  "—",
-                  "First resistance",
-                  "—",
-                  "Key support"
-              ],
-              "news": [],
-              "learning": [],
-              "history": []
-          }
+          DATA_DIR = "data"
+          REPORT_FILE = "data/reports.json"
+
+          os.makedirs(DATA_DIR, exist_ok=True)
+
+          now = datetime.now(ZoneInfo("Asia/Kolkata"))
+
+          today = now.strftime("%d %B %Y")
+          current_time = now.strftime("%I:%M %p IST")
+
+
+          # ==================================================
+          # CHECK API KEY
+          # ==================================================
 
           api_key = os.environ.get("OPENAI_API_KEY")
 
-          if api_key:
-              prompt = """
-          Create a concise Indian stock-market pre-open report for today.
+          print("OPENAI_API_KEY available:", bool(api_key))
 
-          Return ONLY valid JSON with these keys:
-          date,time,mood,summary,stats,drivers,setup,news,learning,history.
+          if not api_key:
+              raise RuntimeError(
+                  "OPENAI_API_KEY is not available. "
+                  "Check GitHub repository Secrets."
+              )
 
-          Do not invent live prices. If live data is unavailable,
-          use "—".
+
+          # ==================================================
+          # GET REAL MARKET NEWS
+          # ==================================================
+
+          queries = [
+              "India stock market Nifty Sensex",
+              "Indian stock market RBI SEBI economy",
+              "India stocks corporate earnings",
+              "Indian rupee crude oil market"
+          ]
+
+          headlines = []
+
+
+          for query in queries:
+
+              try:
+
+                  encoded_query = urllib.parse.quote(query)
+
+                  rss_url = (
+                      "https://news.google.com/rss/search?"
+                      f"q={encoded_query}"
+                      "&hl=en-IN"
+                      "&gl=IN"
+                      "&ceid=IN:en"
+                  )
+
+                  request = urllib.request.Request(
+                      rss_url,
+                      headers={
+                          "User-Agent": "Mozilla/5.0"
+                      }
+                  )
+
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=20
+                  ) as response:
+
+                      xml_data = response.read()
+
+
+                  root = ET.fromstring(xml_data)
+
+                  for item in root.findall(".//item")[:8]:
+
+                      title = item.findtext("title")
+
+                      link = item.findtext("link")
+
+                      pub_date = item.findtext("pubDate")
+
+                      if title:
+
+                          headlines.append({
+                              "title": title.strip(),
+                              "link": link or "",
+                              "published": pub_date or ""
+                          })
+
+
+              except Exception as e:
+
+                  print(
+                      "News fetch failed for:",
+                      query,
+                      repr(e)
+                  )
+
+
+          # Remove duplicate headlines
+
+          unique_headlines = []
+
+          seen = set()
+
+          for item in headlines:
+
+              title = item["title"]
+
+              if title not in seen:
+
+                  seen.add(title)
+
+                  unique_headlines.append(item)
+
+
+          headlines = unique_headlines[:25]
+
+
+          print(
+              "News headlines collected:",
+              len(headlines)
+          )
+
+
+          # ==================================================
+          # PREPARE NEWS FOR AI
+          # ==================================================
+
+          news_text = "\n\n".join(
+              [
+                  f"{i + 1}. {item['title']}"
+                  for i, item in enumerate(headlines)
+              ]
+          )
+
+
+          if not news_text:
+
+              news_text = (
+                  "No external news headlines were available."
+              )
+
+
+          # ==================================================
+          # AI PROMPT
+          # ==================================================
+
+          prompt = f"""
+          You are preparing a concise Indian stock-market
+          pre-open journal for {today}.
+
+          Current time:
+          {current_time}
+
+          Below are externally collected news headlines.
+
+          NEWS:
+          {news_text}
+
+          IMPORTANT RULES:
+
+          1. Do NOT invent live prices.
+          2. Do NOT invent market movements.
+          3. Do NOT invent news.
+          4. If a value is unavailable, use "--".
+          5. Use only the supplied headlines for the news section.
+          6. Keep the report useful for an Indian retail trader.
+          7. Clearly distinguish facts from interpretation.
+          8. Return ONLY valid JSON.
+          9. Do not use Markdown.
+          10. Do not put ``` around the JSON.
+
+          Return exactly this structure:
+
+          {{
+            "date": "{today}",
+            "time": "{current_time}",
+            "mood": "Cautious / Positive / Negative / Neutral",
+            "summary": "Short market summary",
+            "stats": {{
+              "nifty": "--",
+              "sensex": "--",
+              "crude": "--",
+              "usdinr": "--",
+              "fii": "--"
+            }},
+            "drivers": [
+              "driver 1",
+              "driver 2",
+              "driver 3"
+            ],
+            "setup": [
+              "Market bias",
+              "Important level",
+              "First resistance",
+              "First support",
+              "Key support"
+            ],
+            "news": [
+              {{
+                "headline": "Important headline",
+                "impact": "Positive / Negative / Neutral",
+                "explanation": "Why it may matter"
+              }}
+            ],
+            "learning": [
+              "One useful market concept explained simply"
+            ],
+            "history": []
+          }}
           """
 
-              body = json.dumps({
+
+          # ==================================================
+          # OPENAI API REQUEST
+          # ==================================================
+
+          body = json.dumps(
+              {
                   "model": "gpt-4o-mini",
+
                   "messages": [
+                      {
+                          "role": "system",
+                          "content": (
+                              "You are a careful Indian stock-market "
+                              "research assistant. Never invent facts."
+                          )
+                      },
                       {
                           "role": "user",
                           "content": prompt
                       }
                   ],
-                  "temperature": 0.2
-              }).encode()
 
-              req = urllib.request.Request(
-                  "https://api.openai.com/v1/chat/completions",
-                  data=body,
-                  headers={
-                      "Authorization": "Bearer " + api_key,
-                      "Content-Type": "application/json"
+                  "temperature": 0.2,
+
+                  "response_format": {
+                      "type": "json_object"
                   }
-              )
+              }
+          ).encode("utf-8")
 
-              try:
-                  with urllib.request.urlopen(req, timeout=60) as response:
-                      result = json.load(response)
 
-                  content = result["choices"][0]["message"]["content"]
+          request = urllib.request.Request(
+              "https://api.openai.com/v1/chat/completions",
 
-                  if "```" in content:
-                      content = content.split("```")[1]
-                      if content.startswith("json"):
-                          content = content[4:]
+              data=body,
 
-                  report = json.loads(content.strip())
+              headers={
+                  "Authorization": "Bearer " + api_key,
+                  "Content-Type": "application/json"
+              },
 
-              except Exception as e:
-                  print("AI generation failed:", e)
-                  print("Using fallback report.")
+              method="POST"
+          )
 
-          path = "data/reports.json"
 
           try:
-              with open(path, "r", encoding="utf-8") as f:
-                  old = json.load(f)
-          except Exception:
-              old = {"reports": []}
 
-          reports = old.get("reports", [])
-          reports.insert(0, report)
+              with urllib.request.urlopen(
+                  request,
+                  timeout=90
+              ) as response:
+
+                  raw_response = response.read().decode(
+                      "utf-8"
+                  )
+
+
+          except urllib.error.HTTPError as e:
+
+              error_body = e.read().decode(
+                  "utf-8",
+                  errors="replace"
+              )
+
+              print(
+                  "OpenAI HTTP error:",
+                  e.code
+              )
+
+              print(
+                  "OpenAI response:",
+                  error_body
+              )
+
+              raise
+
+
+          except Exception as e:
+
+              print(
+                  "OpenAI request failed:",
+                  repr(e)
+              )
+
+              raise
+
+
+          # ==================================================
+          # PARSE OPENAI RESPONSE
+          # ==================================================
+
+          try:
+
+              api_response = json.loads(
+                  raw_response
+              )
+
+              content = (
+                  api_response["choices"][0]
+                  ["message"]["content"]
+              )
+
+              report = json.loads(
+                  content.strip()
+              )
+
+
+          except Exception as e:
+
+              print(
+                  "Could not parse OpenAI response:",
+                  repr(e)
+              )
+
+              print(
+                  "Raw response:",
+                  raw_response
+              )
+
+              raise
+
+
+          # ==================================================
+          # VALIDATE REPORT
+          # ==================================================
+
+          required_keys = [
+              "date",
+              "time",
+              "mood",
+              "summary",
+              "stats",
+              "drivers",
+              "setup",
+              "news",
+              "learning",
+              "history"
+          ]
+
+
+          missing = [
+              key
+              for key in required_keys
+              if key not in report
+          ]
+
+
+          if missing:
+
+              raise RuntimeError(
+                  "AI report missing keys: "
+                  + ", ".join(missing)
+              )
+
+
+          # ==================================================
+          # LOAD EXISTING HISTORY
+          # ==================================================
+
+          try:
+
+              with open(
+                  REPORT_FILE,
+                  "r",
+                  encoding="utf-8"
+              ) as f:
+
+                  old_data = json.load(f)
+
+          except Exception:
+
+              old_data = {
+                  "reports": []
+              }
+
+
+          reports = old_data.get(
+              "reports",
+              []
+          )
+
+
+          # ==================================================
+          # SAVE NEW REPORT
+          # ==================================================
+
+          report["history"] = []
+
+          reports.insert(
+              0,
+              report
+          )
+
+
+          # Keep last 30 reports
+
           reports = reports[:30]
 
-          with open(path, "w", encoding="utf-8") as f:
+
+          final_data = {
+              "reports": reports
+          }
+
+
+          with open(
+              REPORT_FILE,
+              "w",
+              encoding="utf-8"
+          ) as f:
+
               json.dump(
-                  {"reports": reports},
+                  final_data,
                   f,
                   ensure_ascii=False,
                   indent=2
               )
 
-          print("Saved daily report.")
+
+          print(
+              "Saved daily report successfully."
+          )
+
+          print(
+              "Report date:",
+              report["date"]
+          )
+
+          print(
+              "Report mood:",
+              report["mood"]
+          )
+
+          print(
+              "News items:",
+              len(report["news"])
+          )
+
           PY
 
+
+      # --------------------------------------------------
+      # 3. Commit generated report
+      # --------------------------------------------------
       - name: Commit updated report
         run: |
+
           git config user.name "market-news-bot"
-          git config user.email "actions@users.noreply.github.com"
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add data/reports.json
-          git diff --cached --quiet || git commit -m "Update daily market report"
-          git push
+
+          if git diff --cached --quiet; then
+
+            echo "No report changes to commit."
+
+          else
+
+            git commit -m "Update daily market report"
+
+            git push
+
+          fi
