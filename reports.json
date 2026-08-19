@@ -1,0 +1,81 @@
+{
+  "reports": [
+    {
+      "date": "19 August 2026",
+      "time": "7:00 AM IST",
+      "mood": "Cautious / Mildly Bearish",
+      "summary": "Crude above $90, geopolitical uncertainty and weak global cues pressure sentiment, while institutional buying and strong Indian earnings provide a cushion.",
+      "stats": {
+        "nifty": "24,154.90",
+        "crude": ">$90",
+        "usdinr": "≈₹95.68",
+        "fii": "Buying"
+      },
+      "drivers": [
+        [
+          "🛢️",
+          "Crude remains above $90",
+          "Higher crude raises India's import bill and can pressure INR, inflation and fuel-sensitive sectors.",
+          "HIGH"
+        ],
+        [
+          "🌍",
+          "US/global cues remain weak",
+          "Higher Treasury yields and weaker global risk appetite can weigh on Indian equities.",
+          "HIGH"
+        ],
+        [
+          "💰",
+          "FII and DII buying",
+          "Institutional buying can absorb some selling pressure.",
+          "HIGH"
+        ]
+      ],
+      "setup": [
+        "24,300+",
+        "Recovery / bullish confirmation",
+        "24,250–24,300",
+        "First resistance",
+        "24,100",
+        "Key support"
+      ],
+      "news": [
+        [
+          "Crude remains above $90",
+          "Higher crude keeps import-bill and inflation risks elevated.",
+          "Indian equities / INR",
+          "Bearish"
+        ],
+        [
+          "US/global cues remain weak",
+          "Treasury yields and global risk appetite remain important.",
+          "IT / Financials / Index",
+          "Bearish"
+        ],
+        [
+          "FII and DII buying",
+          "Institutional flows may cushion intraday selling.",
+          "Large caps / Index",
+          "Bullish"
+        ]
+      ],
+      "learning": [
+        [
+          "Why does crude affect India?",
+          "Higher oil can increase the import bill, pressure the rupee and raise inflation expectations."
+        ],
+        [
+          "FII vs DII flows",
+          "Institutional flows can amplify or absorb index pressure; persistence matters more than one day's number."
+        ]
+      ],
+      "history": [
+        [
+          "19 Aug 2026",
+          "Cautious / Mildly Bearish",
+          "Crude above $90; global cues weak; institutional buying offers a cushion."
+        ]
+      ]
+    }
+  ]
+}

@@ -1,15 +1,13 @@
-# Market News Journal — Stage 1.2
+# Market News Journal
 
-A mobile-first section-based Indian market news journal.
+Mobile-first, section-based Indian market pre-open journal.
 
-## Navigation
-- Home — 7 AM briefing and quick market setup
-- News — searchable/filterable news desk
-- Market Effect — news → India → sectors → index → time horizon
-- History — calendar-based daily archive
-- Learning — morning note and future post-market review
+Sections: Home, News, Market Effect, History, Learning.
 
-## Stage 2
-Live news and market data, automated 7:00 AM IST generation, cloud persistence and post-market comparison.
+## Deployment
+Publish the repository with GitHub Pages from `main` and `/ (root)`.
 
-Never commit API keys or secrets to GitHub.
+## Automation
+The included GitHub Actions workflow can update `data/reports.json` every morning.
+Add a repository secret named `OPENAI_API_KEY` to enable the optional AI generation.
+Without the secret, the app still works with its bundled report.
