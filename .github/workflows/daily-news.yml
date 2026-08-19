@@ -1,15 +1,142 @@
 name: Daily Market News Update
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-
+  schedule:
+    - cron: "30 1 * * *"
 permissions:
   contents: write
 
 jobs:
-  test:
+  update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test workflow
-        run: echo "Daily Market News workflow is working!"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate daily report
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          os.makedirs("data", exist_ok=True)
+
+          today = datetime.now(
+              ZoneInfo("Asia/Kolkata")
+          ).strftime("%d %B %Y")
+
+          report = {
+              "date": today,
+              "time": "7:00 AM IST",
+              "mood": "Cautious",
+              "summary": "Daily Indian market pre-open report.",
+              "stats": {
+                  "nifty": "—",
+                  "crude": "—",
+                  "usdinr": "—",
+                  "fii": "—"
+              },
+              "drivers": [],
+              "setup": [
+                  "—",
+                  "Awaiting confirmation",
+                  "—",
+                  "First resistance",
+                  "—",
+                  "Key support"
+              ],
+              "news": [],
+              "learning": [],
+              "history": []
+          }
+
+          api_key = os.environ.get("OPENAI_API_KEY")
+
+          if api_key:
+              prompt = """
+          Create a concise Indian stock-market pre-open report for today.
+
+          Return ONLY valid JSON with these keys:
+          date,time,mood,summary,stats,drivers,setup,news,learning,history.
+
+          Do not invent live prices. If live data is unavailable,
+          use "—".
+          """
+
+              body = json.dumps({
+                  "model": "gpt-4o-mini",
+                  "messages": [
+                      {
+                          "role": "user",
+                          "content": prompt
+                      }
+                  ],
+                  "temperature": 0.2
+              }).encode()
+
+              req = urllib.request.Request(
+                  "https://api.openai.com/v1/chat/completions",
+                  data=body,
+                  headers={
+                      "Authorization": "Bearer " + api_key,
+                      "Content-Type": "application/json"
+                  }
+              )
+
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      result = json.load(response)
+
+                  content = result["choices"][0]["message"]["content"]
+
+                  if "```" in content:
+                      content = content.split("```")[1]
+                      if content.startswith("json"):
+                          content = content[4:]
+
+                  report = json.loads(content.strip())
+
+              except Exception as e:
+                  print("AI generation failed:", e)
+                  print("Using fallback report.")
+
+          path = "data/reports.json"
+
+          try:
+              with open(path, "r", encoding="utf-8") as f:
+                  old = json.load(f)
+          except Exception:
+              old = {"reports": []}
+
+          reports = old.get("reports", [])
+          reports.insert(0, report)
+          reports = reports[:30]
+
+          with open(path, "w", encoding="utf-8") as f:
+              json.dump(
+                  {"reports": reports},
+                  f,
+                  ensure_ascii=False,
+                  indent=2
+              )
+
+          print("Saved daily report.")
+          PY
+
+      - name: Commit updated report
+        run: |
+          git config user.name "market-news-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/reports.json
+          git diff --cached --quiet || git commit -m "Update daily market report"
+          git push
