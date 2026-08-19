@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07101d">
+<title>Market News Journal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="appbar">
+  <div>
+    <div class="eyebrow">INDIAN MARKET INTELLIGENCE</div>
+    <h1>Market News Journal</h1>
+  </div>
+  <button id="todayBtn" class="icon-btn" title="Today">Today</button>
+</header>
+
+<main>
+  <section id="home" class="screen active">
+    <div class="date-line"><span id="homeDate"></span><span class="edition">● 7:00 AM IST</span></div>
+    <section class="hero">
+      <div>
+        <span class="section-kicker">TODAY'S MARKET MOOD</span>
+        <h2 id="homeBias"></h2>
+        <p id="homeSummary"></p>
+      </div>
+      <div id="homeEmoji" class="mood">🟡</div>
+    </section>
+
+    <div class="quick-grid" id="metrics"></div>
+
+    <section class="card">
+      <div class="card-head"><div><h3>⚡ Top market drivers</h3><p>What matters most before the open</p></div><button class="text-btn" data-go="news">See all</button></div>
+      <div id="topNews"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>🎯 Today's setup</h3><p>Levels and scenarios</p></div><button class="text-btn" data-go="effect">Market effect</button></div>
+      <div id="homeSetup"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>📌 Quick actions</h3><p>Jump to a section</p></div></div>
+      <div class="quick-actions">
+        <button data-go="news">📰 News</button>
+        <button data-go="history">📅 History</button>
+        <button data-go="effect">📊 Market Effect</button>
+        <button data-go="learning">🧠 Learning</button>
+      </div>
+    </section>
+  </section>
+
+  <section id="news" class="screen">
+    <div class="page-title"><span class="section-kicker">NEWS DESK</span><h2>Important News</h2><p>Every item is filtered for likely Indian-market relevance.</p></div>
+    <div class="chips" id="newsFilters">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="positive">🟢 Positive</button>
+      <button class="chip" data-filter="negative">🔴 Negative</button>
+      <button class="chip" data-filter="neutral">🟡 Watch</button>
+      <button class="chip" data-filter="high">⚡ High impact</button>
+    </div>
+    <label class="search">🔎 <input id="search" placeholder="Search news, sectors, keywords…"></label>
+    <div id="newsList"></div>
+  </section>
+
+  <section id="effect" class="screen">
+    <div class="page-title"><span class="section-kicker">TRANSMISSION MAP</span><h2>Market Effect</h2><p>News → India → sectors → index → time horizon.</p></div>
+    <div id="effectList"></div>
+  </section>
+
+  <section id="history" class="screen">
+    <div class="page-title"><span class="section-kicker">ARCHIVE</span><h2>History</h2><p>Browse previous 7 AM editions by date.</p></div>
+    <div class="calendar card">
+      <div class="calendar-head"><button id="prevMonth" class="icon-btn">‹</button><strong id="monthTitle"></strong><button id="nextMonth" class="icon-btn">›</button></div>
+      <div class="weekdays"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <div class="legend"><span>🟢 Positive</span><span>🟡 Cautious</span><span>🔴 Bearish</span></div>
+    </div>
+    <div class="card"><div class="card-head"><div><h3>Selected edition</h3><p id="selectedHint">Tap a date above.</p></div></div><div id="selectedReport"></div></div>
+  </section>
+
+  <section id="learning" class="screen">
+    <div class="page-title"><span class="section-kicker">PERSONAL JOURNAL</span><h2>Learning</h2><p>Compare your morning view with what actually happened.</p></div>
+    <div class="card">
+      <h3>📝 My morning note</h3>
+      <p>Save your pre-market thought for the selected edition.</p>
+      <textarea id="note" placeholder="Example: Neutral. Watching 24,100 support. No trade until confirmation…"></textarea>
+      <button id="saveNote" class="primary">Save note</button><span id="saved"></span>
+    </div>
+    <div class="card">
+      <h3>🔬 Post-market review</h3>
+      <p>This section is prepared for Stage 2, when the app can compare the 7 AM view with actual market movement.</p>
+      <div class="review-grid"><div><small>Morning view</small><b id="reviewBias">—</b></div><div><small>Actual move</small><b>Stage 2</b></div><div><small>Primary driver</small><b>Stage 2</b></div><div><small>Lesson</small><b>Stage 2</b></div></div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" data-go="home"><span>🏠</span>Home</button>
+  <button class="nav-item" data-go="news"><span>📰</span>News</button>
+  <button class="nav-item" data-go="effect"><span>📊</span>Effect</button>
+  <button class="nav-item" data-go="history"><span>📅</span>History</button>
+  <button class="nav-item" data-go="learning"><span>🧠</span>Learn</button>
+</nav>
+<footer>Stage 1.2 • Section-based mobile app shell • Stage 2 adds live data & automation</footer>
+<script src="app.js"></script>
+</body>
+</html>
