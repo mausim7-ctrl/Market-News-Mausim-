@@ -31,109 +31,110 @@ jobs:
 
           today = datetime.now(
               ZoneInfo("Asia/Kolkata")
-          ).strftime("%Y-%m-%d")
+          ).strftime("%d %B %Y")
 
-          prompt = """
-          Create a concise Indian stock-market morning intelligence report.
-
-          Return ONLY valid JSON with these keys:
-
-          {
-            "date": "",
-            "mood": "",
-            "summary": "",
-            "drivers": [],
-            "news": [],
-            "market_effect": [],
-            "learning": [],
-            "history": []
+          report = {
+              "date": today,
+              "time": "7:00 AM IST",
+              "mood": "Cautious",
+              "summary": "Daily Indian market pre-open report.",
+              "stats": {
+                  "nifty": "—",
+                  "crude": "—",
+                  "usdinr": "—",
+                  "fii": "—"
+              },
+              "drivers": [],
+              "setup": [
+                  "—",
+                  "Awaiting confirmation",
+                  "—",
+                  "First resistance",
+                  "—",
+                  "Key support"
+              ],
+              "news": [],
+              "learning": [],
+              "history": []
           }
 
-          Focus on:
-          - Nifty
-          - Sensex
-          - crude oil
-          - USD/INR
-          - FII/DII
-          - major global cues
-          - important Indian market news
-          - likely market impact
+          api_key = os.environ.get("OPENAI_API_KEY")
 
-          Do not invent live prices.
-          If live data is unavailable, explicitly say so.
+          if api_key:
+              prompt = """
+          Create a concise Indian stock-market pre-open report for today.
+
+          Return ONLY valid JSON with these keys:
+          date,time,mood,summary,stats,drivers,setup,news,learning,history.
+
+          Do not invent live prices. If live data is unavailable,
+          use "—".
           """
 
-          body = json.dumps({
-              "model": "gpt-4o-mini",
-              "messages": [
-                  {
-                      "role": "user",
-                      "content": prompt
+              body = json.dumps({
+                  "model": "gpt-4o-mini",
+                  "messages": [
+                      {
+                          "role": "user",
+                          "content": prompt
+                      }
+                  ],
+                  "temperature": 0.2
+              }).encode()
+
+              req = urllib.request.Request(
+                  "https://api.openai.com/v1/chat/completions",
+                  data=body,
+                  headers={
+                      "Authorization": "Bearer " + api_key,
+                      "Content-Type": "application/json"
                   }
-              ],
-              "temperature": 0.2
-          }).encode()
+              )
 
-          request = urllib.request.Request(
-              "https://api.openai.com/v1/chat/completions",
-              data=body,
-              headers={
-                  "Authorization":
-                      "Bearer " + os.environ["OPENAI_API_KEY"],
-                  "Content-Type": "application/json"
-              },
-              method="POST"
-          )
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      result = json.load(response)
 
-          with urllib.request.urlopen(request) as response:
-              result = json.load(response)
+                  content = result["choices"][0]["message"]["content"]
 
-          content = result["choices"][0]["message"]["content"]
+                  if "```" in content:
+                      content = content.split("```")[1]
+                      if content.startswith("json"):
+                          content = content[4:]
 
-          if content.startswith("```"):
-              content = content.replace("```json", "")
-              content = content.replace("```", "")
-              content = content.strip()
+                  report = json.loads(content.strip())
 
-          report = json.loads(content)
+              except Exception as e:
+                  print("AI generation failed:", e)
+                  print("Using fallback report.")
 
           path = "data/reports.json"
 
           try:
               with open(path, "r", encoding="utf-8") as f:
-                  database = json.load(f)
+                  old = json.load(f)
           except Exception:
-              database = {"reports": []}
+              old = {"reports": []}
 
-          database["reports"] = [
-              r for r in database["reports"]
-              if r.get("date") != today
-          ]
-
-          report["date"] = today
-          report["generated_at"] = datetime.now(
-              ZoneInfo("Asia/Kolkata")
-          ).isoformat()
-
-          database["reports"].insert(0, report)
-
-          database["reports"] = database["reports"][:90]
+          reports = old.get("reports", [])
+          reports.insert(0, report)
+          reports = reports[:30]
 
           with open(path, "w", encoding="utf-8") as f:
               json.dump(
-                  database,
+                  {"reports": reports},
                   f,
                   ensure_ascii=False,
                   indent=2
               )
 
-          print("Daily market report saved.")
+          print("Saved daily report.")
           PY
 
       - name: Commit updated report
         run: |
           git config user.name "market-news-bot"
-          git config user.email "actions@github.com"
+          git config user.email "actions@users.noreply.github.com"
           git add data/reports.json
           git diff --cached --quiet || git commit -m "Update daily market report"
           git push
