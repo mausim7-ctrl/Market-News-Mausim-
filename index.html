@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07101d">
+<title>Market News Journal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div><div class="eyebrow">INDIAN MARKET INTELLIGENCE</div><h1>Market News Journal</h1><p>7:00 AM pre-market edition • date-wise archive</p></div>
+  <button id="todayBtn" class="ghost">Today</button>
+</header>
+<main>
+<section class="hero">
+  <div><div class="report-line"><span id="reportDate"></span><span class="edition">● 7:00 AM IST</span></div>
+  <h2 id="headline"></h2><p id="summary"></p><small>Pre-market view • Not a buy/sell recommendation</small></div>
+  <div id="score" class="score">🟡</div>
+</section>
+<section id="metrics" class="metrics"></section>
+<section class="toolbar">
+  <label class="search">🔎 <input id="search" placeholder="Search news, sectors, keywords…"></label>
+  <label class="select">Filter <select id="filter"><option value="all">All</option><option value="positive">🟢 Positive</option><option value="negative">🔴 Negative</option><option value="neutral">🟡 Watch</option><option value="high">⚡ High impact</option></select></label>
+</section>
+<section><div class="section-head"><div><h3>📰 Important news</h3><p>What happened → why it matters → likely effect</p></div><span id="count"></span></div><div id="newsList"></div></section>
+<section class="two-col">
+  <div class="panel"><div class="section-head"><h3>📊 Nifty map</h3><span>Key levels</span></div><div id="levels"></div></div>
+  <div class="panel"><div class="section-head"><h3>🎯 Option buyer's radar</h3><span>Scenarios</span></div><div id="radar"></div></div>
+</section>
+<section class="panel history"><div class="section-head"><div><h3>📅 Daily history</h3><p>Tap any date to open that morning's edition</p></div></div><div id="history"></div></section>
+<section class="panel"><h3>📝 My morning note</h3><p>Record your own view before 9:15 AM.</p><textarea id="note" placeholder="Example: Neutral. Watching 24,100 support. No trade until first 15 minutes…"></textarea><button id="save" class="primary">Save note for this date</button><span id="saved"></span></section>
+</main>
+<footer>Stage 1.1 • Mobile-first UI • Stage 2 will add live news & 7 AM automation</footer>
+<script src="app.js"></script>
+</body>
+</html>
