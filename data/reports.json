@@ -1,0 +1,28 @@
+{
+  "reports": [
+    {
+      "date": "19 August 2026",
+      "time": "7:00 AM IST",
+      "mood": "Cautious",
+      "summary": "Daily Indian market pre-open report.",
+      "stats": {
+        "nifty": "—",
+        "crude": "—",
+        "usdinr": "—",
+        "fii": "—"
+      },
+      "drivers": [],
+      "setup": [
+        "—",
+        "Awaiting confirmation",
+        "—",
+        "First resistance",
+        "—",
+        "Key support"
+      ],
+      "news": [],
+      "learning": [],
+      "history": []
+    }
+  ]
+}
