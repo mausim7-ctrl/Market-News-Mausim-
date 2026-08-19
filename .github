@@ -1,0 +1,106 @@
+name: Market News Journal Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Stage 2 structure
+        run: |
+          mkdir -p data scripts .github/workflows
+          echo '{"reports":[]}' > data/reports.json
+
+      - name: Create daily workflow
+        run: |
+          cat > .github/workflows/daily-news.yml <<'EOF'
+          name: Daily 7 AM Market News
+
+          on:
+            workflow_dispatch:
+            schedule:
+              - cron: "0 7 * * *"
+                timezone: "Asia/Kolkata"
+
+          permissions:
+            contents: write
+
+          jobs:
+            generate:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+
+                - uses: actions/setup-python@v5
+                  with:
+                    python-version: "3.12"
+
+                - name: Generate report
+                  env:
+                    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  run: python scripts/generate_report.py
+
+                - name: Save report
+                  run: |
+                    git config user.name "market-news-bot"
+                    git config user.email "actions@users.noreply.github.com"
+                    git add data/reports.json
+                    git diff --cached --quiet || git commit -m "Daily market news report"
+                    git push
+          EOF
+
+      - name: Create report generator
+        run: |
+          cat > scripts/generate_report.py <<'PY'
+          import json
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          today = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d")
+
+          report = {
+              "date": today,
+              "generated_at": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(),
+              "status": "Stage 2 connected",
+              "bias": "Cautious",
+              "summary": "Daily market-news automation is connected. Live news and AI analysis will be added next.",
+              "news": [],
+              "levels": [],
+              "radar": []
+          }
+
+          path = "data/reports.json"
+
+          try:
+              with open(path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+          except Exception:
+              data = {"reports": []}
+
+          reports = data.get("reports", [])
+          reports = [r for r in reports if r.get("date") != today]
+          reports.insert(0, report)
+
+          with open(path, "w", encoding="utf-8") as f:
+              json.dump({"reports": reports[:366]}, f, ensure_ascii=False, indent=2)
+
+          print("Saved report for", today)
+          PY
+
+      - name: Commit Stage 2
+        run: |
+          git config user.name "market-news-bootstrap"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git rm -f SETUP-MARKET-NEWS.yml 2>/dev/null || true
+          git commit -m "Install Market News Journal Stage 2" || true
+          git push
