@@ -17,7 +17,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate daily report
-        if: ${{ secrets.OPENAI_API_KEY != '' }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -25,22 +24,43 @@ jobs:
           import json
           import os
           import urllib.request
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
 
-          prompt = """Create a concise Indian stock-market
-          pre-open report for today.
+          os.makedirs("data", exist_ok=True)
+
+          today = datetime.now(
+              ZoneInfo("Asia/Kolkata")
+          ).strftime("%Y-%m-%d")
+
+          prompt = """
+          Create a concise Indian stock-market morning intelligence report.
 
           Return ONLY valid JSON with these keys:
-          date,time,mood,summary,stats,drivers,setup,news,learning,history.
 
-          stats: nifty, crude, usdinr, fii.
-          drivers: arrays of [icon,title,why,priority].
-          setup: six strings.
-          news: [title,why,market_effect,bias].
-          learning: [title,explanation].
-          history: [date,mood,summary].
+          {
+            "date": "",
+            "mood": "",
+            "summary": "",
+            "drivers": [],
+            "news": [],
+            "market_effect": [],
+            "learning": [],
+            "history": []
+          }
+
+          Focus on:
+          - Nifty
+          - Sensex
+          - crude oil
+          - USD/INR
+          - FII/DII
+          - major global cues
+          - important Indian market news
+          - likely market impact
 
           Do not invent live prices.
-          Use "—" when live data is unavailable.
+          If live data is unavailable, explicitly say so.
           """
 
           body = json.dumps({
@@ -54,49 +74,66 @@ jobs:
               "temperature": 0.2
           }).encode()
 
-          req = urllib.request.Request(
+          request = urllib.request.Request(
               "https://api.openai.com/v1/chat/completions",
               data=body,
               headers={
                   "Authorization":
                       "Bearer " + os.environ["OPENAI_API_KEY"],
                   "Content-Type": "application/json"
-              }
+              },
+              method="POST"
           )
 
-          with urllib.request.urlopen(req, timeout=60) as r:
-              obj = json.load(r)
+          with urllib.request.urlopen(request) as response:
+              result = json.load(response)
 
-          content = obj["choices"][0]["message"]["content"].strip()
+          content = result["choices"][0]["message"]["content"]
 
           if content.startswith("```"):
-              content = content.split("\n", 1)[1]
-              content = content.rsplit("```", 1)[0]
+              content = content.replace("```json", "")
+              content = content.replace("```", "")
+              content = content.strip()
 
-          data = json.loads(content)
+          report = json.loads(content)
 
-          with open(
-              "data/reports.json",
-              "w",
-              encoding="utf-8"
-          ) as f:
+          path = "data/reports.json"
+
+          try:
+              with open(path, "r", encoding="utf-8") as f:
+                  database = json.load(f)
+          except Exception:
+              database = {"reports": []}
+
+          database["reports"] = [
+              r for r in database["reports"]
+              if r.get("date") != today
+          ]
+
+          report["date"] = today
+          report["generated_at"] = datetime.now(
+              ZoneInfo("Asia/Kolkata")
+          ).isoformat()
+
+          database["reports"].insert(0, report)
+
+          database["reports"] = database["reports"][:90]
+
+          with open(path, "w", encoding="utf-8") as f:
               json.dump(
-                  {"reports": [data]},
+                  database,
                   f,
                   ensure_ascii=False,
                   indent=2
               )
+
+          print("Daily market report saved.")
           PY
 
       - name: Commit updated report
-        if: ${{ secrets.OPENAI_API_KEY != '' }}
         run: |
           git config user.name "market-news-bot"
-          git config user.email "actions@users.noreply.github.com"
-
+          git config user.email "actions@github.com"
           git add data/reports.json
-
-          git diff --cached --quiet || \
-            git commit -m "Update daily market report"
-
+          git diff --cached --quiet || git commit -m "Update daily market report"
           git push
