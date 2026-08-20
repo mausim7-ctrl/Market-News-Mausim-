@@ -1,6 +1,31 @@
 {
   "reports": [
     {
+      "date": "20 August 2026",
+      "time": "09:32 AM IST",
+      "mood": "Cautious",
+      "summary": "Daily Indian market pre-open report could not be generated.",
+      "stats": {
+        "nifty": "--",
+        "sensex": "--",
+        "bank_nifty": "--",
+        "crude": "--",
+        "usdinr": "--",
+        "fii": "--",
+        "dii": "--"
+      },
+      "drivers": [
+        "Awaiting market data confirmation"
+      ],
+      "setup": [
+        "First resistance",
+        "Key support"
+      ],
+      "news": [],
+      "learning": [],
+      "history": []
+    },
+    {
       "date": "19 August 2026",
       "time": "05:35 PM IST",
       "mood": "Cautious",
