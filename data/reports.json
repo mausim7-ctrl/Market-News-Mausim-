@@ -1,6 +1,31 @@
 {
   "reports": [
     {
+      "date": "13 October 2026",
+      "time": "01:25 PM IST",
+      "mood": "Cautious",
+      "summary": "Daily Indian market pre-open report could not be generated.",
+      "stats": {
+        "nifty": "--",
+        "sensex": "--",
+        "bank_nifty": "--",
+        "crude": "--",
+        "usdinr": "--",
+        "fii": "--",
+        "dii": "--"
+      },
+      "drivers": [
+        "Awaiting market data confirmation"
+      ],
+      "setup": [
+        "First resistance",
+        "Key support"
+      ],
+      "news": [],
+      "learning": [],
+      "history": []
+    },
+    {
       "date": "12 October 2026",
       "time": "01:06 PM IST",
       "mood": "Cautious",
