@@ -1,6 +1,31 @@
 {
   "reports": [
     {
+      "date": "07 November 2026",
+      "time": "12:57 PM IST",
+      "mood": "Cautious",
+      "summary": "Daily Indian market pre-open report could not be generated.",
+      "stats": {
+        "nifty": "--",
+        "sensex": "--",
+        "bank_nifty": "--",
+        "crude": "--",
+        "usdinr": "--",
+        "fii": "--",
+        "dii": "--"
+      },
+      "drivers": [
+        "Awaiting market data confirmation"
+      ],
+      "setup": [
+        "First resistance",
+        "Key support"
+      ],
+      "news": [],
+      "learning": [],
+      "history": []
+    },
+    {
       "date": "06 November 2026",
       "time": "01:38 PM IST",
       "mood": "Cautious",
@@ -1453,31 +1478,6 @@
     {
       "date": "09 September 2026",
       "time": "07:07 AM IST",
-      "mood": "Cautious",
-      "summary": "Daily Indian market pre-open report could not be generated.",
-      "stats": {
-        "nifty": "--",
-        "sensex": "--",
-        "bank_nifty": "--",
-        "crude": "--",
-        "usdinr": "--",
-        "fii": "--",
-        "dii": "--"
-      },
-      "drivers": [
-        "Awaiting market data confirmation"
-      ],
-      "setup": [
-        "First resistance",
-        "Key support"
-      ],
-      "news": [],
-      "learning": [],
-      "history": []
-    },
-    {
-      "date": "08 September 2026",
-      "time": "07:06 AM IST",
       "mood": "Cautious",
       "summary": "Daily Indian market pre-open report could not be generated.",
       "stats": {
